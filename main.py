@@ -93,6 +93,26 @@ def _already_done_count(pred_path: Path) -> int:
         return sum(1 for _ in f)
 
 
+def _read_predictions(pred_path: Path) -> tuple[list[dict], list[int]]:
+    """Re-read a predictions.jsonl into (preds, gts) for end-of-run metrics."""
+    if not pred_path.exists():
+        return [], []
+    preds: list[dict] = []
+    gts: list[int] = []
+    with pred_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            row = json.loads(line)
+            preds.append(
+                {
+                    "pred_idx": row["pred_idx"],
+                    "parse_level": row["parse_level"],
+                    "confidence": row.get("confidence", 0.0),
+                }
+            )
+            gts.append(row["gt_idx"])
+    return preds, gts
+
+
 def _run_eval(cfg: Config, args: argparse.Namespace) -> int:
     run_id = _resolve_run_id(cfg, args.run_id)
     out_dir = Path(cfg.eval.output_dir) / run_id
@@ -172,13 +192,16 @@ def _run_eval(cfg: Config, args: argparse.Namespace) -> int:
                         fplog.write(json.dumps(row, ensure_ascii=False) + "\n")
 
     wall = time.time() - t_infer_start
-    n = len(preds_seen) or 1
-    metrics = compute_metrics(preds_seen, gts_seen, num_classes=len(dataset.class_names))
+    all_preds, all_gts = _read_predictions(pred_path)
+    n = len(all_preds) or 1
+    metrics = compute_metrics(all_preds, all_gts, num_classes=len(dataset.class_names))
+    new_samples = len(preds_seen)
     metrics["throughput"] = {
-        "total_samples": len(preds_seen),
+        "total_samples": len(all_preds),
+        "new_samples_this_run": new_samples,
         "wall_time_sec": round(wall, 2),
-        "samples_per_sec": round(len(preds_seen) / wall, 3) if wall > 0 else 0.0,
-        "avg_latency_ms_per_sample": round(1000 * wall / n, 2),
+        "samples_per_sec": round(new_samples / wall, 3) if wall > 0 and new_samples else 0.0,
+        "avg_latency_ms_per_sample": round(1000 * wall / new_samples, 2) if new_samples else 0.0,
         "model_load_sec": round(model_load_sec, 2),
     }
     (out_dir / "metrics.json").write_text(
