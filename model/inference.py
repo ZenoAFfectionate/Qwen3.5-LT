@@ -25,6 +25,7 @@ def _build_llm(cfg: Config):
         gpu_memory_utilization=cfg.model.gpu_memory_utilization,
         max_model_len=cfg.model.max_model_len,
         limit_mm_per_prompt=cfg.model.limit_mm_per_prompt,
+        enable_prefix_caching=True,
     )
 
 
