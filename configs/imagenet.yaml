@@ -1,0 +1,29 @@
+model:
+  path: /home/kemove/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc
+  trust_remote_code: true
+  dtype: bfloat16
+  gpu_memory_utilization: 0.85
+  max_model_len: 8192
+  limit_mm_per_prompt: {image: 1}
+
+dataset:
+  name: imagenet
+  root: /opt/ImageNet
+  split: val
+  classes_file: prompts/imagenet_classes.txt
+
+inference:
+  batch_size: 8
+  temperature: 0.0
+  max_tokens: 64
+
+prompt:
+  template: classify_closed_set
+  inject_all_classes: true
+
+eval:
+  num_samples: null
+  save_predictions: true
+  output_dir: outputs/
+
+run_id: null
