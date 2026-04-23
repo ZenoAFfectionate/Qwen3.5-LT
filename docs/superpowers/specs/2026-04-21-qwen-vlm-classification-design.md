@@ -1,5 +1,7 @@
 # Qwen3.5-VL 图像分类代码框架设计
 
+bash scripts/run_inference.sh --resume --full --run-id full_val_20260421
+
 - **Date**: 2026-04-21
 - **Project**: `/home/kemove/Experiment/Qwen3.5-LT`
 - **Goal**: 基于 vLLM 引擎，用 Qwen3.5-2B 多模态模型在 ImageNet-1K 平衡数据集上完成 zero-shot 图像分类；代码框架预留长尾（LT）扩展与微调接口。
